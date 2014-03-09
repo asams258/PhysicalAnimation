@@ -11,7 +11,7 @@
 #include <vector>
 #include "Particle.h"
 namespace util {
-  void writeParticle (const vector<particle> &, const int & frame);
+  void writeParticle (const vector<particle *> &, const int & frame);
 }
 
 

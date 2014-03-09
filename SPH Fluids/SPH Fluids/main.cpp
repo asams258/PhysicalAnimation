@@ -18,17 +18,17 @@
 //consider deque
 //using std::vector;
 
-vector<particle> particles;
+vector<particle *> particles;
 
 int num_parts = 0;
 //They space it .05 apart
 //Radius of each .015
 void initParticles(){
   double i,j,k;
-  for(i=4;i<4.2;i+=.05){
-    for (j=1; j<1.2; j+=.05){
-      for (k=4;k<4.2; k+=.05){
-        particles.push_back(particle(i,j,k));
+  for(i=4;i<4.2;i+=.03){
+    for (j=0; j<0.2; j+=.03){
+      for (k=4;k<4.2; k+=.03){
+        particles.push_back(new particle(i,j,k));
         ++num_parts;
       }//end k
     }//end j
@@ -44,30 +44,35 @@ int main () {
     iter = 0;
     //run logic
     util::writeParticle(particles,f);
-    for (std::vector<particle>::iterator it = particles.begin() ; it != particles.end(); ++it){
+    for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
       //Speed this up for realz from O(n^2) to better
-      it->getNeighbors(particles);
-      forces::accumlateExtForces(*it);
-      it->applyExtForces();
-      it->predictPosition();
+      (*it)->getNeighbors(particles);
+      forces::accumlateExtForces(*(*it));
+      (*it)->applyExtForces();
+      (*it)->predictPosition();
     }//end init particle advection
+    std::cout<<"Done applying ext and predicting" << std::endl;
     while (iter < Constants::SolverIterations){
-      for (std::vector<particle>::iterator it = particles.begin() ; it != particles.end(); ++it){
-        forces::computeDensity(*it);
-        forces::computeLambda(*it);
+      for (std::vector<particle*>::iterator it = particles.begin() ; it != particles.end(); ++it){
+        forces::computeDensity(*(*it));
+        forces::computeLambda(*(*it));
       }
-      for (std::vector<particle>::iterator it = particles.begin() ; it != particles.end(); ++it){
-        forces::computeDeltaP(*it);
-        forces::boundayConstraint(*it);
+      std::cout<<"Lambda And Densities " << std::endl;
+      for (std::vector<particle*>::iterator it = particles.begin() ; it != particles.end(); ++it){
+        forces::computeDeltaP(*(*it));
+        forces::boundayConstraint(*(*it));
       }
-      for (std::vector<particle>::iterator it = particles.begin() ; it != particles.end(); ++it){
-        it->updatePosition();
+      std::cout<<"Bounday and Deltas" << std::endl;
+      for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
+        (*it)->updatePosition();
       }
+      std::cout<<"Updated Positions"<<std::endl;
+      ++iter;
     }//end while
-    for (std::vector<particle>::iterator it = particles.begin() ; it != particles.end(); ++it){
-      it->restartParticle();
+    for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
+      (*it)->restartParticle();
     }
-    std::cout<<"On Frame: " << f << std::endl;
+    std::cout<<"$$$$$$$$$$$$$$$$$$$$$$$$ On Frame: " << f << "$$$$$$$$$$$$$"<< std::endl;
   }//end frame loop
   
   return 0;

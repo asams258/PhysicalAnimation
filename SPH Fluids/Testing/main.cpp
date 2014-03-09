@@ -20,7 +20,8 @@ int main(int argc, const char * argv[])
   parts.pop_back();
   
   vector <particle *> copy;
-  copy.push_back(&parts.pop_back());
+  copy.push_back(parts.back());
+  
   int e = 10;
   vector<int *> s;
   

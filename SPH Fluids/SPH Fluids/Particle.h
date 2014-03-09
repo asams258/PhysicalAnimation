@@ -25,7 +25,7 @@ struct particle{
   double lambda;
   double rho;
   double f [3]= {0,0,0};
-  vector<particle > neighbors;
+  vector<particle *> neighbors;
   
   particle():ID(G_ID++){}
   
@@ -62,11 +62,11 @@ struct particle{
     }
   }
   //first arg is lst of all particles, second is output neighbor list
-  void getNeighbors (const vector<particle> & lst){
+  void getNeighbors (const vector<particle *> & lst){
     double val = 0;
-    for (vector<particle>::const_iterator it = lst.begin(); it != lst.end(); ++it){
+    for (vector<particle*>::const_iterator it = lst.begin(); it != lst.end(); ++it){
       //std::cout<< "from particle " << it->p[0] << " " << it->p[1] <<" " <<it->p[2] << std::endl;
-      distanceSq(*it,val);
+      distanceSq(*(*it),val);
       if (val< Constants::h_sq){
         neighbors.push_back(*it);
       }

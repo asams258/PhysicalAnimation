@@ -58,9 +58,9 @@ namespace forces{
     double r;
     double w = 0.0;
     double dens = 0.0;
-    for (std::vector<particle>::const_iterator it = part.neighbors.begin() ; it != part.neighbors.end(); ++it){
+    for (std::vector<particle *>::const_iterator it = part.neighbors.begin() ; it != part.neighbors.end(); ++it){
       for (int i=0;i<3;++i){
-        r += (part.p[i]-it->p[i])*(part.p[i]-it->p[i]);
+        r += (part.p[i]-(*it)->p[i])*(part.p[i]-(*it)->p[i]);
       }
       //passing r which is ||pi - pj||^2)
       poly6Kernel(r,w);
@@ -80,10 +80,10 @@ namespace forces{
     double r [3];
     double g [3];
     //for every K (it)
-    for (std::vector<particle>::const_iterator it = i.neighbors.begin() ; it != i.neighbors.end(); ++it){
+    for (std::vector<particle *>::const_iterator it = i.neighbors.begin() ; it != i.neighbors.end(); ++it){
       //reset g and make r = i-it positions
       for (int j =0; j<3;++j){
-        r[j] = i.p[j]-it->p[j];
+        r[j] = i.p[j]-(*it)->p[j];
         g[j] = 0;
       }
       gradSpikyKernel(r,g);
@@ -102,13 +102,13 @@ namespace forces{
     double r [3];
     double g [3];
     double w;
-    for (std::vector<particle>::const_iterator it = i.neighbors.begin(); it != i.neighbors.end(); ++it){
+    for (std::vector<particle *>::const_iterator it = i.neighbors.begin(); it != i.neighbors.end(); ++it){
       for (int j =0; j<3;++j){
-        r[j] = i.p[j]-it->p[j];
+        r[j] = i.p[j]-(*it)->p[j];
         g[j] = 0;
       }
       gradSpikyKernel(r, g);
-      w = (i.lambda + it->lambda)/Constants::rho_0;
+      w = (i.lambda + (*it)->lambda)/Constants::rho_0;
       //sum the corrections
       for (int j=0; j<3; ++j){
         i.d_p[j] += w * g[j];
