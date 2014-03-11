@@ -90,6 +90,13 @@ struct particle{
       p[i] = p[i] + d_p_col[i] + d_p[i];
     }
   }
+  
+  void cleard_P(){
+    for (int i=0; i<3;++i){
+      d_p[i] = 0;
+      d_p_col[i] = 0;
+    }
+  }
   void restartParticle(){
     for (int i=0; i<3;++i){
       v0[i]= 1/Constants::d_t * (p[i] - p0[i]);

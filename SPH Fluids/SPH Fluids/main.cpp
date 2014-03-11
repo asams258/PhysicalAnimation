@@ -21,13 +21,13 @@
 vector<particle *> particles;
 
 int num_parts = 0;
-//They space it .05 apart
+//They space it .03 apart
 //Radius of each .015
 void initParticles(){
   double i,j,k;
-  for(i=4;i<4.2;i+=.03){
-    for (j=0; j<0.2; j+=.03){
-      for (k=4;k<4.2; k+=.03){
+  for(i=4;i<4.4;i+=.03){
+    for (j=.2; j<0.4; j+=.03){
+      for (k=4;k<4.4; k+=.03){
         particles.push_back(new particle(i,j,k));
         ++num_parts;
       }//end k
@@ -36,45 +36,61 @@ void initParticles(){
   std::cout<<"Particles in Sim: " << num_parts <<std::endl;
 }
 
+//Clean up memory allocation
+void deleteParticles(){
+  for (int x = 0; x < particles.size();++x){
+    delete particles.back();
+    particles.pop_back();
+  }
+}
+
 int main () {
   int iter;
   initParticles();
-  //double * force;
+  
   for (int f = 0; f<Constants::FRAMES; ++f){
-    iter = 0;
-    //run logic
     util::writeParticle(particles,f);
-    for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
-      //Speed this up for realz from O(n^2) to better
-      (*it)->getNeighbors(particles);
-      forces::accumlateExtForces(*(*it));
-      (*it)->applyExtForces();
-      (*it)->predictPosition();
-    }//end init particle advection
-    std::cout<<"Done applying ext and predicting" << std::endl;
-    while (iter < Constants::SolverIterations){
-      for (std::vector<particle*>::iterator it = particles.begin() ; it != particles.end(); ++it){
-        forces::computeDensity(*(*it));
-        forces::computeLambda(*(*it));
-      }
-      std::cout<<"Lambda And Densities " << std::endl;
-      for (std::vector<particle*>::iterator it = particles.begin() ; it != particles.end(); ++it){
-        forces::computeDeltaP(*(*it));
-        forces::boundayConstraint(*(*it));
-      }
-      std::cout<<"Bounday and Deltas" << std::endl;
+    //Write after Reps iterations of logic, so each frame is made of Reps iterations
+    for (int r = 0; r < Constants::Reps; ++r){
+      
       for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
-        (*it)->updatePosition();
+        //Speed this up from O(n^2) to better / oct tree?
+        (*it)->getNeighbors(particles);
+        forces::accumlateExtForces(*(*it));
+        (*it)->applyExtForces();
+        (*it)->predictPosition();
+      }//end init particle advection
+      
+      iter = 0;
+      while (iter < Constants::SolverIterations){
+        for (std::vector<particle*>::iterator it = particles.begin() ; it != particles.end(); ++it){
+          forces::computeDensity(*(*it));
+          forces::computeLambda(*(*it));
+        }
+        
+        for (std::vector<particle*>::iterator it = particles.begin() ; it != particles.end(); ++it){
+          forces::computeDeltaP(*(*it));
+          forces::boundayConstraint(*(*it));
+        }
+        
+        for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
+          (*it)->updatePosition();
+          //Restart d_p_col and d_p, as methods dont do that
+          (*it)->cleard_P();
+        }
+        
+        ++iter;
+      }//end while
+      //Update P0, V0, and set all values to 0
+      for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
+        (*it)->restartParticle();
       }
-      std::cout<<"Updated Positions"<<std::endl;
-      ++iter;
-    }//end while
-    for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
-      (*it)->restartParticle();
-    }
-    std::cout<<"$$$$$$$$$$$$$$$$$$$$$$$$ On Frame: " << f << "$$$$$$$$$$$$$"<< std::endl;
+      
+    }//end reps
+    std::cout<<"Finished Frame: " << f << std::endl;
   }//end frame loop
   
+  deleteParticles();
   return 0;
 }//end main
 

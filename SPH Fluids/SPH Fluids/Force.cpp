@@ -124,6 +124,7 @@ namespace forces{
     i.f[1] += Constants::GRAVITY;
   }
   
+  //TODO: Look Over THis, see if impluse too large if starting at boundary
   void boundayConstraint(particle &i){
     for (int j = 0; j<3;++j){
       //if outside, clamp to boundary
