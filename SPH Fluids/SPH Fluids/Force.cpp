@@ -19,7 +19,7 @@
 
 //Should probably make this a class, since i have private stuffs
 namespace forces{
-  //keeping r squared to save Flops
+  //r input is already squared to save Flops
   void poly6Kernel(double r, double & w){
     if (r<=h_sq){
       w = poly6Weight*pow(h_sq-r,3);
@@ -79,6 +79,9 @@ namespace forces{
     double k_j_sum = 0;
     double r [3];
     double g [3];
+    double s_corr;
+    double s_pw;
+    
     //for every K (it)
     for (std::vector<particle *>::const_iterator it = i.neighbors.begin() ; it != i.neighbors.end(); ++it){
       //reset g and make r = i-it positions
@@ -86,6 +89,13 @@ namespace forces{
         r[j] = i.p[j]-(*it)->p[j];
         g[j] = 0;
       }
+      
+      poly6Kernel(r[0]*r[0]+r[1]*r[1]+r[2]*r[2], s_corr);
+      //Since I am keeping the input to poly6 squared, i'll continue
+      poly6Kernel(Constants::h_sq*pow(Constants::k,2), s_pw);
+      s_corr = -Constants::k*pow((s_corr/s_pw),Constants::n);
+      
+      
       gradSpikyKernel(r,g);
       for (int m =0;m<3;++m){
         k_i_sum[m] += g[m];
@@ -94,6 +104,7 @@ namespace forces{
     }
     double k_i;
     k_i = (pow(r[0],2)+pow(r[1],2)+pow(r[2],2))*pow(Constants::rho_0,-2);
+    //TODO: add s_corr here
     i.lambda = -c/(k_i+k_j_sum+Constants::epsilon);
     
   }
@@ -123,6 +134,7 @@ namespace forces{
   void accumlateExtForces(particle &i){
     i.f[1] += Constants::GRAVITY;
   }
+  
   
   //TODO: Look Over THis, see if impluse too large if starting at boundary
   void boundayConstraint(particle &i){
