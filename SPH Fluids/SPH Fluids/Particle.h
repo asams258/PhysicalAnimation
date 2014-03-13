@@ -67,16 +67,19 @@ struct particle{
     for (vector<particle*>::const_iterator it = lst.begin(); it != lst.end(); ++it){
       //std::cout<< "from particle " << it->p[0] << " " << it->p[1] <<" " <<it->p[2] << std::endl;
       distanceSq(*(*it),val);
-      if (val< Constants::h_sq){
+      if (val < Constants::h_sq){
         neighbors.push_back(*it);
       }
     }//end for
   }
   
   void applyExtForces(){
+    //as now only gravity.. save computation
+    v[1] = v0[1] + Constants::d_t * f[1];
+    /*
     for (int i =0; i<3; ++i){
       v[i] = v0[i] + Constants::d_t * f[i];
-    }
+    }*/
   }
   
   void predictPosition(){
@@ -85,16 +88,16 @@ struct particle{
     }
   }
   
-  void updatePosition(){
-    for (int i=0; i<3; ++i){
-      p[i] = p[i] + d_p_col[i] + d_p[i];
-    }
-  }
-  
   void cleard_P(){
     for (int i=0; i<3;++i){
       d_p[i] = 0;
       d_p_col[i] = 0;
+    }
+  }
+  
+  void updatePosition(){
+    for (int i=0; i<3; ++i){
+      p[i] = p[i] + d_p_col[i] + d_p[i];
     }
   }
   void restartParticle(){

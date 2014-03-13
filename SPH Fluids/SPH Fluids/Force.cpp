@@ -19,7 +19,8 @@
 
 //Should probably make this a class, since i have private stuffs
 namespace forces{
-  //r input is already squared to save Flops
+  //keeping r squared to save Flops
+  //Make sure R is all positive values?
   void poly6Kernel(double r, double & w){
     if (r<=h_sq){
       w = poly6Weight*pow(h_sq-r,3);
@@ -58,17 +59,17 @@ namespace forces{
     double r;
     double w = 0.0;
     double dens = 0.0;
-    for (std::vector<particle *>::const_iterator it = part.neighbors.begin() ; it != part.neighbors.end(); ++it){
+    for (std::vector<particle *>::const_iterator it = part.neighbors.begin(); it != part.neighbors.end(); ++it){
+      //Reset r each time before summing
+      r = 0;
       for (int i=0;i<3;++i){
         r += (part.p[i]-(*it)->p[i])*(part.p[i]-(*it)->p[i]);
       }
       //passing r which is ||pi - pj||^2)
       poly6Kernel(r,w);
       dens += w;
-      part.rho = dens;
-      r = 0;
-      dens =0;
     }//iterating all particles
+    part.rho = dens;
   }
   
   void computeLambda(particle &i){
@@ -135,8 +136,7 @@ namespace forces{
     i.f[1] += Constants::GRAVITY;
   }
   
-  
-  //TODO: Look Over THis, see if impluse too large if starting at boundary
+  //Check This:
   void boundayConstraint(particle &i){
     for (int j = 0; j<3;++j){
       //if outside, clamp to boundary
