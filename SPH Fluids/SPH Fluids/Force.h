@@ -19,8 +19,8 @@ using Constants::h;
 namespace forces{
   // 315/(64*pi)
   
-  const double poly6Weight = 1.5666814710608448/pow(h,9);
-  const double spikyWeight = 4.7746482927568605/pow(h,6);
+  const double poly6Weight = 315/(64*3.1415926*pow(h,9));
+  const double spikyWeight = 15/(3.1415926*pow(h,6));
   const double viscWeight = 2.3873241463784303/pow(h,3);
   void accumlateExtForces(particle &i);
   void boundayConstraint(particle &i);

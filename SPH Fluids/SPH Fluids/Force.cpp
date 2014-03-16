@@ -73,59 +73,63 @@ namespace forces{
   }
   
   void computeLambda(particle &i){
-    computeDensity(i);
     double c = i.rho / Constants::rho_0 -1;
     //For case where k=i
     double k_i_sum [3] = {0,0,0};
     double k_j_sum = 0;
     double r [3];
     double g [3];
-    double s_corr;
-    double s_pw;
-    
-    //for every K (it)
+
+    //for every k
     for (std::vector<particle *>::const_iterator it = i.neighbors.begin() ; it != i.neighbors.end(); ++it){
-      //reset g and make r = i-it positions
-      for (int j =0; j<3;++j){
+      //reset g and set r as the differnce in positions
+      for (int j =0; j<3; ++j){
         r[j] = i.p[j]-(*it)->p[j];
         g[j] = 0;
       }
-      
-      poly6Kernel(r[0]*r[0]+r[1]*r[1]+r[2]*r[2], s_corr);
-      //Since I am keeping the input to poly6 squared, i'll continue
-      poly6Kernel(Constants::h_sq*pow(Constants::k,2), s_pw);
-      s_corr = -Constants::k*pow((s_corr/s_pw),Constants::n);
-      
-      
       gradSpikyKernel(r,g);
+      //Accumlate for the k=i case
       for (int m =0;m<3;++m){
         k_i_sum[m] += g[m];
       }
-      k_j_sum += -((pow(g[0],2) + pow(g[1],2) + pow(g[2],2))*pow(Constants::rho_0,-2));
+      //for each i j pair there will be one k=j case
+      k_j_sum += ((pow(g[0],2) + pow(g[1],2) + pow(g[2],2))*pow(Constants::rho_0,-2));
     }
+    //Summing up the k=i
     double k_i;
-    k_i = (pow(r[0],2)+pow(r[1],2)+pow(r[2],2))*pow(Constants::rho_0,-2);
-    //TODO: add s_corr here
+    k_i = (pow(k_i_sum[0],2)+pow(k_i_sum[1],2)+pow(k_i_sum[2],2))*pow(Constants::rho_0,-2);
     i.lambda = -c/(k_i+k_j_sum+Constants::epsilon);
-    
   }
   
   void computeDeltaP(particle &i){
     double r [3];
     double g [3];
     double w;
+    //For Tensile Correction
+    double s_corr;
+    double s_pw;
+    
     for (std::vector<particle *>::const_iterator it = i.neighbors.begin(); it != i.neighbors.end(); ++it){
       for (int j =0; j<3;++j){
         r[j] = i.p[j]-(*it)->p[j];
         g[j] = 0;
       }
       gradSpikyKernel(r, g);
-      w = (i.lambda + (*it)->lambda)/Constants::rho_0;
+      
+      //S_Corr stuff
+      poly6Kernel(r[0]*r[0]+r[1]*r[1]+r[2]*r[2], s_corr);
+      //use .1h.....3h but squared as input to my poly6 must be squared
+      poly6Kernel(Constants::h_sq*pow(Constants::d_q,2), s_pw);
+      s_corr = -Constants::k*pow((s_corr/s_pw),Constants::n);
+      
+      //TODO: add s_corr here
+      w = i.lambda + (*it)->lambda; //+ s_corr;
       //sum the corrections
       for (int j=0; j<3; ++j){
-        i.d_p[j] += w * g[j];
+        i.d_p[j] += g[j]*w;
       }
     }//end all particle loop
+    //multiply by 1/density_0
     for (int j=0; j<3; ++j){
       i.d_p[j] *= 1/Constants::rho_0;
     }
@@ -136,21 +140,22 @@ namespace forces{
     i.f[1] += Constants::GRAVITY;
   }
   
-  //Check This:
+  //Check This: may need to consider d_p in calculation
   void boundayConstraint(particle &i){
     for (int j = 0; j<3;++j){
       //if outside, clamp to boundary
-      if (i.p[j] + Constants::bubbleRad > Constants::grid_dim[j]){
+      if (i.p[j] + Constants::bubbleRad +i.d_p[j]> Constants::grid_dim[j]){
         // want to head in downwards position to boundary
-        i.d_p_col[j] = Constants::grid_dim[j]-i.p[j];
+        //want P-X where X = P+R-B
+        i.d_p_col[j] = Constants::grid_dim[j]-i.p[j]-Constants::bubbleRad-i.d_p[j];
       }
       //want to bounce that upwards to boundary
-      else if (i.p[j] < 0 + Constants::bubbleRad){
-        i.d_p_col[j] = -i.p[j] + Constants::bubbleRad;
+      else if (i.p[j] + i.d_p[j] < 0 + Constants::bubbleRad){
+        i.d_p_col[j] = -i.p[j] - i.d_p[j] + Constants::bubbleRad;
       }
     }
   }
   
-  }//end namespace
+}//end namespace
 
 

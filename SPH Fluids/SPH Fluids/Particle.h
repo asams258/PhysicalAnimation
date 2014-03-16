@@ -65,7 +65,6 @@ struct particle{
   void getNeighbors (const vector<particle *> & lst){
     double val = 0;
     for (vector<particle*>::const_iterator it = lst.begin(); it != lst.end(); ++it){
-      //std::cout<< "from particle " << it->p[0] << " " << it->p[1] <<" " <<it->p[2] << std::endl;
       distanceSq(*(*it),val);
       if (val < Constants::h_sq){
         neighbors.push_back(*it);
