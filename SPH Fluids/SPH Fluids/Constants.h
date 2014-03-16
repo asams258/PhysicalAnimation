@@ -11,10 +11,10 @@
 #include <string>
 namespace Constants {
   //static const double gridSize = 100;
-  static const double h = .05;
+  static const double h = .032;
   static const double h_sq = h*h;
-  static const double rho_0 = 8000;
-  static const double grid_dim [3] = {.2,.2,.2};
+  static const double rho_0 = 202499;
+  static const double grid_dim [3] = {.2,.4,.2};
   static const std::string path = "/Users/arthur/Desktop/SPHRender/locs.txt";
   static const double GRAVITY = -9.80665;
   //Time step responsible for going nuts

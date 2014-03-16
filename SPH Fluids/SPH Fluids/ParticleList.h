@@ -46,6 +46,7 @@ public:
       insert(*(*it));
     }
   }
+  
   void insert (particle & part){
     int key = 0;
     getKey(part,key);
@@ -83,6 +84,7 @@ public:
           _z = part.p[2]+z;
           if (_x < 0 || _y < 0 || _z < 0){
             //skip it
+            
           }
           else if (_x > Constants::grid_dim[0] || _y > Constants::grid_dim[1] || _z > Constants::grid_dim[2]){
             //skip it
@@ -95,12 +97,12 @@ public:
         }//end z
       }// end y
     }// end x
-    std::cout<<potentials.size() << "size of potentials" << std::endl;
     part.getNeighbors(potentials);
   }
   
   void getKey(double x, double y, double z, int & key){
     //put overflow saftey on particle so it cant be > than dimension, clamp to end
+    key = 0;
     double p [3];
     p[0] = x;
     p[1] = y;
@@ -123,6 +125,7 @@ public:
   }
   
   void getKey(particle & part, int & key){
+    key = 0;
     //put overflow saftey on particle so it cant be > than dimension, clamp to end
     int v [3];
     for (int i = 0; i<3;++i){
@@ -140,6 +143,26 @@ public:
     key += v[1]*y_space;
     key += v[2]*z_space;
   }
+  
+  void printStruct (){
+    vector<particle *> inner;
+    vector<int> ct;
+    ct.resize(100);
+    int q = 0;
+    for (std::unordered_map<int,vector<particle *>>::iterator it=lst.begin(); it!=lst.end(); ++it){
+      std::cout << it->first << " => "<< '\n';
+      q = (it->first);
+      ct[q] = 1;
+      for (std::vector<particle*>::iterator it2 = (it->second).begin(); it2 != (it->second).end(); ++it2){
+        std::cout << (**it2).p[0] << " " << (**it2).p[1] << " " << (**it2).p[2] << std::endl;
+      }
+    }/*
+    for (int i = 0; i < ct.size();  ++i){
+      if (ct.at(i) == 1)
+        std::cout<<i<<std::endl;
+    }*/
     
+  }
+  
 };
 #endif /* defined(__SPH_Fluids__ParticleList__) */

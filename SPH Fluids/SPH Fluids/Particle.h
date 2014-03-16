@@ -45,24 +45,17 @@ struct particle{
     }
   }
   
-  particle(double _p [3], double _v [3], double _f [3]):ID(G_ID++){
-    for (int i=0; i<3;++i){
-      p[i] = _p[i];
-      p0[i] = _p[i];
-      v[i] = _v[i];
-      v0[i] = _v[i];
-    }
-  }
-  
   //Uses P not p0, as in first iteration we will set P = P0
   void distanceSq (const particle & other, double & t) const{
-    t=0;
-    for (int i=0; i<3;++i){
-      t+= (p[i] - other.p[i])*(p[i] - other.p[i]);
+    t = 0;
+    for (int i=0; i<3; ++i){
+      t += (p[i] - other.p[i])*(p[i] - other.p[i]);
     }
   }
-  //first arg is lst of all particles, second is output neighbor list
+  //first arg is lst of all particles
+  //Neighbors are cleared then added.
   void getNeighbors (const vector<particle *> & lst){
+    neighbors.clear();
     double val = 0;
     for (vector<particle*>::const_iterator it = lst.begin(); it != lst.end(); ++it){
       distanceSq(*(*it),val);
@@ -74,21 +67,19 @@ struct particle{
   
   void applyExtForces(){
     //as now only gravity.. save computation
-    v[1] = v0[1] + Constants::d_t * f[1];
-    /*
-    for (int i =0; i<3; ++i){
+    for (int i=0; i<3; ++i){
       v[i] = v0[i] + Constants::d_t * f[i];
-    }*/
+    }
   }
   
   void predictPosition(){
     for (int i=0; i<3; ++i){
-      p[i] = p0[i]+ Constants::d_t * v[i];
+      p[i] = p0[i] + Constants::d_t * v[i];
     }
   }
   
   void cleard_P(){
-    for (int i=0; i<3;++i){
+    for (int i=0; i<3; ++i){
       d_p[i] = 0;
       d_p_col[i] = 0;
     }
@@ -99,18 +90,29 @@ struct particle{
       p[i] = p[i] + d_p_col[i] + d_p[i];
     }
   }
-  void restartParticle(){
+  
+  void updateVelocity(){
     for (int i=0; i<3;++i){
-      v0[i]= 1/Constants::d_t * (p[i] - p0[i]);
+      v0[i]= (p[i] - p0[i])/Constants::d_t;
+    }
+  }
+  void setInitialPos(){
+    for (int i=0; i<3;++i){
       p0[i] = p[i];
+    }
+  }
+  
+  void resetCorr_Density(){
+    for (int i=0; i<3;++i){
       f[i] = 0;
       d_p[i] = 0;
       d_p_col[i] = 0;
     }
-    neighbors.clear();
     lambda = 0;
     rho = 0;
   }
+
+  
 };
 
 
