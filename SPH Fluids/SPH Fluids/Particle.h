@@ -116,8 +116,4 @@ struct particle{
 };
 
 
-
 #endif /* defined(__SPH_Fluids__Utils__) */
-
-
-

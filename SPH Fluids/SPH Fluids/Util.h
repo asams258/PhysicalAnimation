@@ -12,6 +12,7 @@
 #include "Particle.h"
 namespace util {
   void writeParticle (const vector<particle *> &, const int & frame);
+  void writeDebug (const vector<particle *> &, const int & frame, const int & rep);
 }
 
 

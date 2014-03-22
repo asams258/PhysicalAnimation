@@ -23,9 +23,9 @@ int num_parts = 0;
 //Radius of each .015
 void initParticles(){
   double i,j,k;
-  for(i=.016;i<0.1;i+=.01){
-    for (j=.05; j<0.15; j+=.01){
-      for (k=.016;k<.1; k+=.01){
+  for(i=.015;i<0.6;i+=.2){
+    for (j=.015; j<0.6; j+=.2){
+      for (k=.015;k<.6; k+=.2){
         particles.push_back(new particle(i,j,k));
         ++num_parts;
       }//end k
@@ -63,13 +63,18 @@ int main () {
           forces::computeDeltaP(*(*it));
           forces::boundayConstraint(*(*it));
         }
+        //MERGE THESE 2 FOR LOOPS only sperated so i can debug
         for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
           (*it)->updatePosition();
+          //(*it)->cleard_P();
+        }
+        util::writeDebug(particles,f,iter);
+        for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
+          //(*it)->updatePosition();
           (*it)->cleard_P();
         }
         ++iter;
       }//end while
-      
       for (std::vector<particle *>::iterator it = particles.begin() ; it != particles.end(); ++it){
         (*it)->updateVelocity();
         (*it)->setInitialPos();

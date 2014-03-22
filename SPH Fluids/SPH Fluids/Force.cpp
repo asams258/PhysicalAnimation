@@ -11,18 +11,12 @@
 #include "Constants.h"
 #include <stdio.h>
 
-//gravity
-//viscocity
-//pressure
-//vorticity
-//
-
 //Should probably make this a class, since i have private stuffs
 namespace forces{
   //keeping r squared to save Flops
   //Make sure R is all positive values?
   void poly6Kernel(double r, double & w){
-    if (r<=h_sq){
+    if (r<=h_sq && r>=0){
       w = poly6Weight*pow(h_sq-r,3);
     }
     else{
@@ -47,7 +41,9 @@ namespace forces{
     double r_d = sqrt(r[0]*r[0]+r[1]*r[1]+r[2]*r[2]);
     if (r_d<=h && r_d>0){
       double w = 3*spikyWeight*pow(h-r_d,2)/r_d;
-      g[0] = w * r[0]; g[1] = w * r[1]; g[2] = w*r[2];
+      g[0] = w * r[0];
+      g[1] = w * r[1];
+      g[2] = w * r[2];
     }
     else {
       g[0] = 0; g[1] = 0; g[2] = 0;
@@ -58,22 +54,23 @@ namespace forces{
   void computeDensity(particle &part){
     double r;
     double w = 0.0;
-    double dens = 0.0;
+    part.rho = 0;
     for (std::vector<particle *>::const_iterator it = part.neighbors.begin(); it != part.neighbors.end(); ++it){
       //Reset r each time before summing
       r = 0;
       for (int i=0;i<3;++i){
-        r += (part.p[i]-(*it)->p[i])*(part.p[i]-(*it)->p[i]);
+        r += (part.p[i]-((*it)->p[i]))*(part.p[i]-((*it)->p[i]));
       }
       //passing r which is ||pi - pj||^2)
       poly6Kernel(r,w);
-      dens += w;
+      part.rho += w;
     }//iterating all particles
-    part.rho = dens;
+    if (part.rho<0)
+      std::cout <<"Density less than 0 on : " << part.ID << std::endl;
   }
   
   void computeLambda(particle &i){
-    double c = i.rho / Constants::rho_0 -1;
+    double c = (i.rho / Constants::rho_0) -1;
     //For case where k=i
     double k_i_sum [3] = {0,0,0};
     double k_j_sum = 0;
@@ -83,21 +80,21 @@ namespace forces{
     //for every k
     for (std::vector<particle *>::const_iterator it = i.neighbors.begin() ; it != i.neighbors.end(); ++it){
       //reset g and set r as the differnce in positions
-      for (int j =0; j<3; ++j){
-        r[j] = i.p[j]-(*it)->p[j];
+      for (int j =0; j <3; ++j){
+        r[j] = i.p[j]-((*it)->p[j]);
         g[j] = 0;
       }
       gradSpikyKernel(r,g);
       //Accumlate for the k=i case
-      for (int m =0;m<3;++m){
+      for (int m =0; m<3; ++m){
         k_i_sum[m] += g[m];
       }
       //for each i j pair there will be one k=j case
-      k_j_sum += ((pow(g[0],2) + pow(g[1],2) + pow(g[2],2))*pow(Constants::rho_0,-2));
+      k_j_sum += ((pow(g[0],2) + pow(g[1],2) + pow(g[2],2))/pow(Constants::rho_0,2));
     }
     //Summing up the k=i
     double k_i;
-    k_i = (pow(k_i_sum[0],2)+pow(k_i_sum[1],2)+pow(k_i_sum[2],2))*pow(Constants::rho_0,-2);
+    k_i = (pow(k_i_sum[0],2)+pow(k_i_sum[1],2)+pow(k_i_sum[2],2))/pow(Constants::rho_0,2);
     i.lambda = -c/(k_i+k_j_sum+Constants::epsilon);
   }
   
@@ -110,8 +107,8 @@ namespace forces{
     double s_pw;
     
     for (std::vector<particle *>::const_iterator it = i.neighbors.begin(); it != i.neighbors.end(); ++it){
-      for (int j =0; j<3;++j){
-        r[j] = i.p[j]-(*it)->p[j];
+      for (int j =0; j<3 ;++j){
+        r[j] = i.p[j]-((*it)->p[j]);
         g[j] = 0;
       }
       gradSpikyKernel(r, g);
@@ -123,7 +120,7 @@ namespace forces{
       s_corr = -Constants::k*pow((s_corr/s_pw),Constants::n);
       
       //TODO: add s_corr here
-      w = i.lambda + (*it)->lambda; //+ s_corr;
+      w = i.lambda + ((*it)->lambda);// + s_corr;
       //sum the corrections
       for (int j=0; j<3; ++j){
         i.d_p[j] += g[j]*w;
