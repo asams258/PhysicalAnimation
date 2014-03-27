@@ -23,9 +23,9 @@ int num_parts = 0;
 //Radius of each .015
 void initParticles(){
   double i,j,k;
-  for(i=.015;i<0.6;i+=.2){
-    for (j=.015; j<0.6; j+=.2){
-      for (k=.015;k<.6; k+=.2){
+  for(i=.3;i<=0.65;i+=.05){
+    for (j=.55; j<=0.902; j+=.05){
+      for (k=.3;k<=.65; k+=.05){
         particles.push_back(new particle(i,j,k));
         ++num_parts;
       }//end k

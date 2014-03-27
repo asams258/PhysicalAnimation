@@ -120,7 +120,7 @@ namespace forces{
       s_corr = -Constants::k*pow((s_corr/s_pw),Constants::n);
       
       //TODO: add s_corr here
-      w = i.lambda + ((*it)->lambda);// + s_corr;
+      w = i.lambda + ((*it)->lambda) + s_corr;
       //sum the corrections
       for (int j=0; j<3; ++j){
         i.d_p[j] += g[j]*w;
